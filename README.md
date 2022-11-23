@@ -7,6 +7,7 @@ jstruct provides an easy way to load json data into C++ structs, and the struct 
 (see ./test/test.cpp)
 
 ## Performance (CPU & Memory)
+### compare with Protobuf
 (TODO)
 
 ## Implementation
