@@ -2,6 +2,7 @@
 #include <jstruct/builder.h>
 #include <jstruct/align_allocer.h>
 
+// define data: Creative
 template < typename Impl >
 class Creative : public Impl {
 public:
@@ -11,11 +12,13 @@ public:
     using Impl::Impl;
 
 public:
+    // Custom code here
     Field<int64_t> creative_id = { this, "creative_id" };
     Field<std::string_view> image_url = { this, "image_url" };
     Array<int32_t> cmatch = { this, "cmatch" };
 };
 
+// operator<<
 std::ostream & operator<< (std::ostream & out, const Creative<::jstruct::JStruct> & creative) {
     return out << "{" << "\n"
            << "        creative_id    : \t" << creative.creative_id() << "\n"
@@ -24,6 +27,7 @@ std::ostream & operator<< (std::ostream & out, const Creative<::jstruct::JStruct
            << "    }";
 }
 
+// define data: Unit
 template < typename Impl >
 class Unit : public Impl {
 public:
@@ -33,12 +37,14 @@ public:
     using Impl::Impl;
 
 public:
+    // Custom code here
     Field<int64_t> unit_id = { this, "unit_id" };
     Field<bool> is_ad = { this, "is_ad" };
     Field<int32_t> bidprice = { this, "bidprice" };
     Array<Creative<Impl>> creative_list = { this, "creative_list" };
 };
 
+// operator<<
 std::ostream & operator<< (std::ostream & out, const Unit<::jstruct::JStruct> & unit) {
     return out << "{" << "\n"
            << "    unit_id        : \t" << unit.unit_id() << "\n"
