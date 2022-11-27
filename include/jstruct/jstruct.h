@@ -7,7 +7,7 @@ namespace jstruct {
 template < typename T >
 class JField {
 public:
-    inline JField(void *, const char *) {}
+    inline JField(void *, const char *) : _val() {}
     inline ~JField() {}
 
     inline const T & operator() () const { return _val; }

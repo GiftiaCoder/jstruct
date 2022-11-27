@@ -9,6 +9,7 @@
 #include "allocer.h"
 #include "jstruct.h"
 #include "jparser.h"
+#include "jerror.h"
 
 namespace jstruct {
 
@@ -24,7 +25,7 @@ public:
     virtual size_t msize() const = 0;
     virtual size_t malign() const = 0;
 
-    virtual bool load(const ::Json::Value & jval, void * cval, Allocer * allocer) const = 0;
+    virtual bool load(const ::Json::Value & jval, void * cval, Allocer * allocer, Option * option, Error * err) const = 0;
 };
 
 template < typename T, bool is_jstruct > class JFieldBuilder;
@@ -42,8 +43,8 @@ public:
         return alignof(T);
     }
 
-    bool load(const ::Json::Value & jval, void * cval, Allocer * allocer) const override {
-        return JParser<T>::parse(jval, (T *) cval, allocer);
+    bool load(const ::Json::Value & jval, void * cval, Allocer * allocer, Option * option, Error * err) const override {
+        return JParser<T>::parse(jval, (T *) cval, allocer, option, err);
     }
 };
 template < typename T >
@@ -63,8 +64,8 @@ public:
         return _builder.malign();
     }
 
-    bool load(const ::Json::Value & jval, void * cval, Allocer * allocer) const override {
-        return _builder.load(jval, cval, allocer);
+    bool load(const ::Json::Value & jval, void * cval, Allocer * allocer, Option * option, Error * err) const override {
+        return _builder.load(jval, cval, allocer, option, err);
     }
 
 private:
@@ -86,17 +87,17 @@ public:
         return alignof(ArrayView<int>);
     }
 
-    bool load(const ::Json::Value & jval, void * cval, Allocer * allocer) const override {
-        if (!jval.isArray()) {
-            // TODO
+    bool load(const ::Json::Value & jval, void * cval, Allocer * allocer, Option * option, Error * err) const override {
+        if (!jval.isArray() && !option->ignore_error_field()) {
+	    if (err) *err << " is not array";
             return false;
         }
         int n = jval.size();
         T * buf = allocer->get<T>(n);
         ((ArrayView<char> *) cval)->reset((char *) buf, ((char *) buf) + (n * sizeof(T)));
         for (int i = 0; i < n; ++i, ++buf) {
-            if (!JParser<T>::parse(jval[i], buf, allocer)) {
-                // TODO
+            if (!JParser<T>::parse(jval[i], buf, allocer, option, err)) {
+		if (err) *err << "]" << i << "[";
                 return false;
             }
         }
@@ -120,17 +121,17 @@ public:
         return alignof(ArrayView<int>);
     }
 
-    bool load(const ::Json::Value & jval, void * cval, Allocer * allocer) const override {
-        if (!jval.isArray()) {
-            // TODO
+    bool load(const ::Json::Value & jval, void * cval, Allocer * allocer, Option * option, Error * err) const override {
+        if (!jval.isArray() && !option->ignore_error_field()) {
+            if (err) *err << " is not array";
             return false;
         }
         int n = jval.size();
         char * buf = allocer->get<char>(n * _builder.msize());
         ((ArrayView<char> *) cval)->reset(buf, buf + (n * _builder.msize()));
         for (int i = 0; i < n; ++i, buf += _builder.msize()) {
-            if (!_builder.load(jval[i], buf, allocer)) {
-                // TODO
+            if (!_builder.load(jval[i], buf, allocer, option, err)) {
+		if (err) *err << "]" << i << "[";
                 return false;
             }
         }
@@ -179,20 +180,24 @@ public:
         return _malign;
     }
 
-    bool load(const ::Json::Value & jval, void * cval, Allocer * allocer) const override {
-        if (!jval.isObject()) {
-            // TODO
+    bool load(const ::Json::Value & jval, void * cval, Allocer * allocer, Option * option, Error * err) const override {
+        if (!jval.isObject() && !option->ignore_error_field()) {
+            if (err) *err << " is not object";
             return false;
         }
         for (auto & field : _fields) {
             auto * jsub = jval.find(field.name.c_str(), field.name.c_str() + field.name.size());
             if (!jsub) {
-                // TODO
-                return false;
+                if (!option->ignore_missing_field()) {
+                    if (err) *err << " field not found" << field.name << ".";
+                    return false;
+                } else {
+                  continue;
+                }
             }
             char * ploc = field.offset + ((char *) cval);
-            if (!field.field->load(*jsub, ploc, allocer)) {
-                // TODO
+            if (!field.field->load(*jsub, ploc, allocer, option, err)) {
+                if (err) *err << field.name << ".";
                 return false;
             }
         }
@@ -216,44 +221,5 @@ private:
     size_t _msize, _malign;
     std::vector<FieldInfo> _fields;
 };
-
-template < template < typename Impl > typename T >
-const T<JStructBuilder> & get_builder() {
-    class Builder final {
-    public:
-        inline Builder() { _builder.init(); }
-        inline const T<JStructBuilder> & operator() () const { return _builder; }
-    private:
-        T<JStructBuilder> _builder;
-    };
-    static Builder builder;
-    return builder();
-}
-
-template < template < typename Impl > typename T >
-const T<JStruct> * load(const ::Json::Value & jval, Allocer * allocer) {
-    using Data = T<JStruct>;
-    Data * data = allocer->get<Data>(1);
-    if (!get_builder<T>().load(jval, data, allocer)) {
-        return nullptr;
-    }
-    return data;
-}
-
-template < template < typename Impl > typename T >
-const T<JStruct> * load(const ::Json::Value & jval, int n, Allocer * allocer) {
-    using Data = T<JStruct>;
-    if (!jval.isArray() || jval.size() < n) {
-        // TODO
-        return nullptr;
-    }
-    Data * data = allocer->get<Data>(n);
-    for (int i = 0; i < n; ++i) {
-        if (!get_builder<T>().load(jval[i], data + i, allocer)) {
-            return nullptr;
-        }
-    }
-    return data;
-}
 
 } // ns jstruct
