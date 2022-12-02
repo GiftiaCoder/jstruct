@@ -4,6 +4,8 @@
 #include <jstruct/jloader.h>
 #include <jstruct/align_allocer.h>
 
+#include <cstring>
+
 static std::string JSON1 = "{ \
     \"unit_id\": 100, \
     \"is_ad\": \"true\", \
@@ -11,22 +13,22 @@ static std::string JSON1 = "{ \
     \"vendor\": 6000, \
     \"creative_list\":[{ \
         \"creative_id\": 200, \
-	\"image_url\": \"http://www.giftialab.org/image/anya.png\", \
-	\"material_tags\": [255,256,257]\
+        \"image_url\": \"http://www.giftialab.org/image/anya.png\", \
+        \"material_tags\": [255,256,257]\
     },{ \
         \"creative_id\": 201, \
-	\"image_url\": \"http://www.giftialab.org/image/aira.png\", \
-	\"material_tags\": [355,356,357]\
+        \"image_url\": \"http://www.giftialab.org/image/aira.png\", \
+        \"material_tags\": [355,356,357]\
     }], \
     \"freq_ctls\": { \
         \"freq_info_1\": \"freq_key_1\", \
         \"freq_info_2\": 22, \
         \"freq_info_3\": 3.14, \
         \"freq_info_4\": false, \
-	\"freq_info_5\": { \
+	    \"freq_info_5\": { \
             \"sub_info_1\": 1, \
             \"sub_info_2\": 2 \
-	}\
+	    }\
     } \
 }";
 static std::string JSON2 = "{ \
@@ -36,22 +38,22 @@ static std::string JSON2 = "{ \
     \"vendor\": 6000, \
     \"creative_list\":[{ \
         \"creative_id\": 200, \
-	\"image_url\": \"http://www.giftialab.org/image/anya.png\", \
-	\"material_tags\": [255,256,257]\
+        \"image_url\": \"http://www.giftialab.org/image/anya.png\", \
+        \"material_tags\": [255,256,257]\
     },{ \
         \"creative_id\": 201, \
-	\"image_url\": \"http://www.giftialab.org/image/aira.png\", \
-	\"material_tags\": [355,356,\"357\"]\
+        \"image_url\": \"http://www.giftialab.org/image/aira.png\", \
+        \"material_tags\": [355,356,3.57]\
     }], \
     \"freq_ctls\": { \
         \"freq_info_1\": \"freq_key_1\", \
         \"freq_info_2\": 22, \
         \"freq_info_3\": 3.14, \
         \"freq_info_4\": false, \
-	\"freq_info_5\": { \
+        \"freq_info_5\": { \
             \"sub_info_1\": 1, \
             \"sub_info_2\": 2 \
-	}\
+        }\
     } \
 }";
 static std::string JSON3 = "{ \
@@ -61,30 +63,29 @@ static std::string JSON3 = "{ \
     \"vendor\": 6000, \
     \"creative_list\":[{ \
         \"creative_id\": 200, \
-	\"image_url\": \"http://www.giftialab.org/image/anya.png\", \
-	\"material_tags\": [255,256,257]\
+        \"image_url\": \"http://www.giftialab.org/image/anya.png\", \
+        \"material_tags\": [255,256,257]\
     },{ \
         \"creative_id\": 201, \
-	\"image_url\": \"http://www.giftialab.org/image/aira.png\", \
-	\"material_tags\": [355,356,357]\
+        \"image_url\": \"http://www.giftialab.org/image/aira.png\", \
+        \"material_tags\": [355,356,357]\
     }], \
     \"freq_ctls\": { \
         \"freq_info_1\": \"freq_key_1\", \
         \"freq_info_2\": 22, \
         \"freq_info_3\": 3.14, \
         \"freq_info_4\": false, \
-	\"freq_info_5\": { \
+        \"freq_info_5\": { \
             \"sub_info_1\": 1, \
             \"sub_info_2\": \"2\" \
-	}\
+        }\
     } \
 }";
 
-int test_load(const std::string & js) {
+int test_load(const std::string & js, const char * err_msg) {
     // prepare json
-    ::Json::Reader reader;
-    ::Json::Value value;
-    reader.parse(js, value);
+    ::rapidjson::Document value;
+    std::cout << value.Parse(js).HasParseError() << std::endl;
 
     // load
     std::cout << std::boolalpha;
@@ -94,49 +95,18 @@ int test_load(const std::string & js) {
     if (!p_unit) {
         std::cout << err.c_str() << std::endl;
         std::cout << "load failed, exit" << std::endl;
-	return -1;
+
+        assert(std::strcmp(err.c_str(), err_msg) == 0);
+        return -1;
     }
-
-    // detail
-    std::cout << "memory_used: " << allocer.space_used() << std::endl;
-    std::cout << "class Unit size: " << sizeof(*p_unit) << " align: " << alignof(*p_unit) << std::endl;
-
-#define PRINT_FIELD(_obj_, _name_) \
-    std::cout << "  " << #_name_ << " = " << _obj_._name_() << std::endl;
-
-    auto & unit = *p_unit;
-    auto & freq_ctls = unit.freq_ctls();
-
-    std::cout << "unit:" << std::endl;
-    PRINT_FIELD(unit, unit_id);
-    PRINT_FIELD(unit, is_ad);
-    PRINT_FIELD(unit, bidprice);
-    PRINT_FIELD(unit, vendor);
-
-    std::cout << "freq_ctls:" << std::endl;
-    PRINT_FIELD(freq_ctls, freq_info_1);
-    PRINT_FIELD(freq_ctls, freq_info_2);
-    PRINT_FIELD(freq_ctls, freq_info_3);
-    PRINT_FIELD(freq_ctls, freq_info_4);
-    auto & sub_freq = freq_ctls.freq_info_5();
-    PRINT_FIELD(sub_freq, sub_info_1);
-    PRINT_FIELD(sub_freq, sub_info_2);
-
-    for (auto & creative : unit.creative_list()) {
-        std::cout << "creative[" << creative.creative_id() << "]:" << std::endl;
-        PRINT_FIELD(creative, image_url);
-        PRINT_FIELD(creative, material_tags);
-    }
-
-#undef PRINT_FIELD
 
     return 0;
 }
 
 int main() {
-    test_load(JSON1);
-    test_load(JSON2);
-    test_load(JSON3);
+    test_load(JSON1, ".is_ad=\"true\" is not bool");
+    test_load(JSON2, ".creative_list[1].material_tags[2]=3.57 is not int32");
+    test_load(JSON3, ".freq_ctls.freq_info_5.sub_info_2=\"2\" is not int32");
     return 0;
 }
 

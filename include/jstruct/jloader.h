@@ -18,7 +18,7 @@ const T<JStructBuilder> & get_builder() {
 }
 
 template < template < typename Impl > typename T >
-const T<JStruct> * load(const ::Json::Value & jval, Allocer * allocer, Option * option = nullptr, Error * err = nullptr) {
+const T<JStruct> * load(const JsonValue & jval, Allocer * allocer, Option * option = nullptr, Error * err = nullptr) {
     static Option DFT_OPTION = Option().set_ignore_missing_field();
     if (!option) option = &DFT_OPTION;
 

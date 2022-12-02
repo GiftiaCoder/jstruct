@@ -1,11 +1,14 @@
 #pragma once
 
+#include "json_def.h"
+
 #include <cstddef>
 #include <cstring>
 #include <string>
 #include <string_view>
 
-#include <json/value.h>
+#include <rapidjson/writer.h>
+#include <rapidjson/stringbuffer.h>
 
 namespace jstruct {
 
@@ -37,13 +40,13 @@ template < size_t N >
 Error & operator<< (Error & error, const char (&msg)[N]) {
     return error.append(msg, N - 1);
 }
-Error & operator<< (Error & error, const ::Json::Value & msg) {
-    std::string smsg = std::move(msg.asString());
-    if (msg.isString()) {
-        return error << "\"" << smsg << "\"";
-    } else {
-        return error << smsg;
-    }
+Error & operator<< (Error & error, const JsonValue & msg) {
+    thread_local ::rapidjson::StringBuffer buff;
+    buff.Clear();
+
+    ::rapidjson::Writer<::rapidjson::StringBuffer> writer(buff);
+    msg.Accept(writer);
+    return error.append(buff.GetString(), buff.GetSize());
 }
 template < typename T >
 Error & operator<< (Error & error, const T & msg) {
