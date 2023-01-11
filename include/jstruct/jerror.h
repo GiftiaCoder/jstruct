@@ -18,12 +18,19 @@ public:
     	*_pos = '\0';
     }
     Error & append(const char * msg, size_t len) {
-        std::memcpy(_pos -= len, msg, len);
+        if ((_pos -= len) >= _buf) {
+            std::memcpy(_pos, msg, len);
+        } else {
+            _pos += len;
+            while (--_pos >= _buf) {
+                *_pos = '?';
+            }
+        }
         return *this;
     }
     inline const char * c_str() const { return _pos; }
 private:
-    char _buf[1024];
+    char _buf[2 * 1024];
     char * _pos;
 };
 

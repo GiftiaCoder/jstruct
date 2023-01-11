@@ -2,7 +2,7 @@
 
 #include <iostream>
 #include <jstruct/jloader.h>
-#include <jstruct/align_allocer.h>
+#include <jstruct/allocer.h>
 #include <cassert>
 
 static std::string JSON = "{ \
@@ -16,7 +16,7 @@ static std::string JSON = "{ \
         \"material_tags\": [255,256,257]\
     },{ \
         \"creative_id\": 201, \
-        \"image_url\": \"http://www.giftialab.org/image/aira.png\", \
+        \"image_url\": \"http://www.giftialab.org/image/anya.png\", \
         \"material_tags\": [355,356,357]\
     }], \
     \"freq_ctls\": { \
@@ -38,7 +38,8 @@ int main() {
 
     // load
     std::cout << std::boolalpha;
-    ::jstruct::AlignAllocer allocer;
+    // ::jstruct::A8Allocer<::jstruct::StrDedupPlugin> allocer;
+    ::jstruct::A8Allocer<> allocer;
     ::jstruct::Option opt;
     ::jstruct::Error err;
     auto * p_unit = ::jstruct::load<Unit>(value, &allocer, &opt, &err);
@@ -84,7 +85,7 @@ int main() {
     auto & crea2 = unit.creative_list()[1];
     std::cout << "creative[" << crea2.creative_id() << "]:" << std::endl;
     TEST(crea2, creative_id, 201);
-    TEST(crea2, image_url, "http://www.giftialab.org/image/aira.png");
+    TEST(crea2, image_url, "http://www.giftialab.org/image/anya.png");
 
 #undef PRINT_FIELD
 

@@ -26,7 +26,7 @@ public:
     virtual size_t msize() const = 0;
     virtual size_t malign() const = 0;
 
-    virtual bool load(const JsonValue & jval, void * cval, Allocer * allocer, Option * option, Error * err) const = 0;
+    virtual bool load(const JsonValue & jval, void * cval, AllocerBase * allocer, Option * option, Error * err) const = 0;
 };
 
 template < typename T, bool is_jstruct > class JFieldBuilder;
@@ -44,7 +44,7 @@ public:
         return alignof(T);
     }
 
-    bool load(const JsonValue & jval, void * cval, Allocer * allocer, Option *, Error * err) const override {
+    bool load(const JsonValue & jval, void * cval, AllocerBase * allocer, Option *, Error * err) const override {
         return JParser<T>::parse(jval, (T *) cval, allocer, err);
     }
 };
@@ -65,7 +65,7 @@ public:
         return _builder.malign();
     }
 
-    bool load(const JsonValue & jval, void * cval, Allocer * allocer, Option * option, Error * err) const override {
+    bool load(const JsonValue & jval, void * cval, AllocerBase * allocer, Option * option, Error * err) const override {
         return _builder.load(jval, cval, allocer, option, err);
     }
 
@@ -88,7 +88,7 @@ public:
         return alignof(ArrayView<int>);
     }
 
-    bool load(const JsonValue & jval, void * cval, Allocer * allocer, Option *, Error * err) const override {
+    bool load(const JsonValue & jval, void * cval, AllocerBase * allocer, Option *, Error * err) const override {
         if (!jval.IsArray()) {
 	        if (err) *err << " is not array";
             return false;
@@ -124,7 +124,7 @@ public:
         return alignof(ArrayView<int>);
     }
 
-    bool load(const JsonValue & jval, void * cval, Allocer * allocer, Option * option, Error * err) const override {
+    bool load(const JsonValue & jval, void * cval, AllocerBase * allocer, Option * option, Error * err) const override {
         if (!jval.IsArray()) {
             if (err) *err << " is not array";
             return false;
@@ -185,7 +185,7 @@ public:
         return _malign;
     }
 
-    bool load(const JsonValue & jval, void * cval, Allocer * allocer, Option * option, Error * err) const override {
+    bool load(const JsonValue & jval, void * cval, AllocerBase * allocer, Option * option, Error * err) const override {
         if (!jval.IsObject()) {
             if (err) *err << " is not object";
             return false;

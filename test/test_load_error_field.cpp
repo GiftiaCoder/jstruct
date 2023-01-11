@@ -2,7 +2,7 @@
 
 #include <iostream>
 #include <jstruct/jloader.h>
-#include <jstruct/align_allocer.h>
+#include <jstruct/allocer.h>
 
 #include <cstring>
 
@@ -89,7 +89,7 @@ int test_load(const std::string & js, const char * err_msg) {
 
     // load
     std::cout << std::boolalpha;
-    ::jstruct::AlignAllocer allocer;
+    ::jstruct::A8Allocer<> allocer;
     ::jstruct::Error err;
     auto * p_unit = ::jstruct::load<Unit>(value, &allocer, nullptr, &err);
     if (!p_unit) {

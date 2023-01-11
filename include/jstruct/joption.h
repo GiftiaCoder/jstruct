@@ -6,8 +6,8 @@ namespace jstruct {
 
 struct Option {
     enum Type {
-	IGNORE_MISSING_FIELD = 1,
-	IGNORE_ERROR_FIELD = 2,
+        IGNORE_MISSING_FIELD = 1,
+        IGNORE_ERROR_FIELD = 2,
     };
     uint64_t ignore_flags = 0;
 

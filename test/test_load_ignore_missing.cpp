@@ -2,7 +2,7 @@
 
 #include <iostream>
 #include <jstruct/jloader.h>
-#include <jstruct/align_allocer.h>
+#include <jstruct/allocer.h>
 #include <cassert>
 
 static std::string JSON = "{ \
@@ -30,7 +30,7 @@ int main() {
 
     // load
     std::cout << std::boolalpha;
-    ::jstruct::AlignAllocer allocer;
+    ::jstruct::A8Allocer<> allocer;
     ::jstruct::Error err;
     auto * p_unit = ::jstruct::load<Unit>(value, &allocer, nullptr, &err);
     if (!p_unit) {

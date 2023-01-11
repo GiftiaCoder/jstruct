@@ -6,11 +6,11 @@
 
 namespace jstruct {
 
-class Allocer;
+class AllocerBase;
 
 template < typename T > struct JParser;
 template <> struct JParser < bool > {
-    static bool parse(const JsonValue & jval, bool * cval, Allocer *, Error * err) {
+    static bool parse(const JsonValue & jval, bool * cval, AllocerBase *, Error * err) {
         if (jval.IsBool()) {
             *cval = jval.GetBool();
             return true;
@@ -21,7 +21,7 @@ template <> struct JParser < bool > {
     }
 };
 template <> struct JParser < int32_t > {
-     static bool parse(const JsonValue & jval, int32_t * cval, Allocer *, Error * err) {
+     static bool parse(const JsonValue & jval, int32_t * cval, AllocerBase *, Error * err) {
         if (jval.IsInt()) {
             *cval = jval.GetInt();
             return true;
@@ -32,7 +32,7 @@ template <> struct JParser < int32_t > {
     }
 };
 template <> struct JParser < int64_t > {
-     static bool parse(const JsonValue & jval, int64_t * cval, Allocer *, Error * err) {
+     static bool parse(const JsonValue & jval, int64_t * cval, AllocerBase *, Error * err) {
         if (jval.IsInt64()) {
             *cval = jval.GetInt64();
             return true;
@@ -43,7 +43,7 @@ template <> struct JParser < int64_t > {
     }
 };
 template <> struct JParser < float > {
-     static bool parse(const JsonValue & jval, float * cval, Allocer *, Error * err) {
+     static bool parse(const JsonValue & jval, float * cval, AllocerBase *, Error * err) {
         if (jval.IsDouble()) {
             *cval = (float) jval.GetDouble();
             return true;
@@ -54,7 +54,7 @@ template <> struct JParser < float > {
     }
 };
 template <> struct JParser < double > {
-     static bool parse(const JsonValue & jval, double * cval, Allocer *, Error * err) {
+     static bool parse(const JsonValue & jval, double * cval, AllocerBase *, Error * err) {
         if (jval.IsDouble()) {
             *cval = jval.GetDouble();
             return true;
@@ -65,7 +65,7 @@ template <> struct JParser < double > {
     }
 };
 template <> struct JParser < std::string_view > {
-     static bool parse(const JsonValue & jval, std::string_view * cval, Allocer * allocer, Error * err) {
+     static bool parse(const JsonValue & jval, std::string_view * cval, AllocerBase * allocer, Error * err) {
         if (jval.IsString()) {
             *cval = allocer->get_string(jval.GetString(), jval.GetStringLength());
             return true;
